@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Torneo de Ajedrez Escolar</title>
+    <!-- Tailwind CSS for modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for chess icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* Touch friendly enhancements */
+        button, input, select { touch-action: manipulation; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navigation Bar (Mobile Optimized) -->
+    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 sticky top-0 z-40 shadow-md">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="bg-amber-600 p-2 rounded-xl text-white shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-chess-knight text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold tracking-tight text-white leading-tight">JaqueMate Escolar</h1>
+                    <p class="text-[10px] text-slate-400">Modo Organizador Móvil</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="exportToWord()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-2 rounded-xl transition duration-200 shadow-md flex items-center space-x-1.5 text-xs">
+                    <i class="fa-solid fa-file-word"></i>
+                    <span class="hidden sm:inline">Exportar DOC</span>
+                </button>
+                <button onclick="resetTournament()" class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 p-2 rounded-xl transition duration-200 border border-rose-500/30 text-xs" title="Reiniciar">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs for Mobile Viewport -->
+    <nav class="bg-slate-800/95 border-b border-slate-700 px-4 py-2 sticky top-[57px] z-30 flex justify-around shadow-sm backdrop-blur-md">
+        <button onclick="switchTab('setup')" id="tabBtnSetup" class="flex-1 py-2 text-xs font-semibold text-center text-amber-400 border-b-2 border-amber-500 transition">
+            <i class="fa-solid fa-users-gear mr-1"></i> Participantes
+        </button>
+        <button onclick="switchTab('pairings')" id="tabBtnPairings" class="flex-1 py-2 text-xs font-semibold text-center text-slate-400 border-b-2 border-transparent transition">
+            <i class="fa-solid fa-chess-board mr-1"></i> Emparejamientos
+        </button>
+        <button onclick="switchTab('standings')" id="tabBtnStandings" class="flex-1 py-2 text-xs font-semibold text-center text-slate-400 border-b-2 border-transparent transition">
+            <i class="fa-solid fa-medal mr-1"></i> Clasificación
+        </button>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-3 sm:p-6 max-w-4xl mx-auto w-full pb-20">
+        
+        <!-- TAB 1: SETUP & PLAYERS -->
+        <div id="tabContentSetup" class="space-y-4">
+            
+            <!-- Tournament Info Card -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-sm font-semibold text-slate-200 mb-3 flex items-center">
+                    <i class="fa-solid fa-trophy text-amber-500 mr-2"></i> Detalles del Torneo
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-1">Nombre del Torneo / Colegio</label>
+                        <input type="text" id="tournamentName" value="Torneo Escolar Primavera 2026" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-slate-100">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Categoría</label>
+                            <input type="text" id="tournamentCategory" value="Sub-14 Primaria" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Rondas Totales</label>
+                            <input type="number" id="totalRounds" min="1" max="15" value="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-slate-100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Registration Card -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-users text-blue-400 mr-2"></i> Inscritos (<span id="playerCount">0</span>)
+                    </h2>
+                    <span class="text-[10px] text-emerald-400 font-medium bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">Sin límite</span>
+                </div>
+
+                <!-- Add Player Form -->
+                <form id="addPlayerForm" onsubmit="addPlayer(event)" class="space-y-2.5 mb-3">
+                    <div>
+                        <input type="text" id="playerName" placeholder="Nombre y Apellido del alumno" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500 text-slate-100">
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="playerSchool" placeholder="Curso (ej. 5to B)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500 text-slate-100">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-medium transition duration-200 shadow-md flex items-center whitespace-nowrap">
+                            <i class="fa-solid fa-user-plus mr-1.5"></i> Añadir
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Quick Load Sample Players -->
+                <div class="mb-3 flex space-x-2">
+                    <button type="button" onclick="loadSamplePlayers()" class="flex-1 bg-slate-700/50 hover:bg-slate-700 text-slate-300 border border-slate-600/50 text-[11px] py-2 rounded-xl transition duration-200">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1 text-amber-400"></i> Cargar prueba (6)
+                    </button>
+                    <button type="button" onclick="clearAllPlayers()" class="bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-800/40 text-[11px] px-3 py-2 rounded-xl transition duration-200">
+                        <i class="fa-solid fa-trash mr-1"></i> Borrar todos
+                    </button>
+                </div>
+
+                <!-- Players List Table / Scrollable -->
+                <div class="max-h-56 overflow-y-auto border border-slate-700/60 rounded-xl mb-4">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-900 text-slate-400 sticky top-0 text-[10px]">
+                            <tr>
+                                <th class="p-2.5">#</th>
+                                <th class="p-2.5">Nombre</th>
+                                <th class="p-2.5">Curso</th>
+                                <th class="p-2.5 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playersTableBody" class="divide-y divide-slate-700/50">
+                            <!-- Dynamic players inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Generate Pairings Button -->
+                <div>
+                    <button onclick="startTournamentAndSwitch();" id="startBtn" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition duration-200 flex items-center justify-center space-x-2 text-xs">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Generar Emparejamientos / Siguiente Ronda</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 2: PAIRINGS & RESULTS -->
+        <div id="tabContentPairings" class="space-y-4 hidden">
+            
+            <!-- Round Pairings Card -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
+                <div class="flex flex-col space-y-3 mb-4 pb-3 border-b border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+                            <i class="fa-solid fa-chess-board text-emerald-400 mr-2"></i> Ronda <span id="currentRoundDisplay" class="ml-1 text-amber-400">1</span>
+                        </h2>
+                        <span class="text-[10px] text-slate-400">Toca el botón para puntuar</span>
+                    </div>
+                    <div id="roundTabs" class="flex space-x-1.5 overflow-x-auto pb-1">
+                        <!-- Round tab buttons dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- Pairings Mobile Cards / Table -->
+                <div id="pairingsContainer" class="space-y-3">
+                    <!-- Dynamic pairings cards inserted here for optimal mobile touch targets -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 3: STANDINGS -->
+        <div id="tabContentStandings" class="space-y-4 hidden">
+            
+            <!-- Standings Table Card -->
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
+                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-medal text-amber-400 mr-2"></i> Tabla de Posiciones
+                    </h2>
+                    <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-lg">G=1 | E=0.5 | P=0</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-900 text-slate-400 text-[10px]">
+                            <tr>
+                                <th class="p-2.5">Pos</th>
+                                <th class="p-2.5">Alumno</th>
+                                <th class="p-2.5">Curso</th>
+                                <th class="p-2.5 text-center">Ptos</th>
+                                <th class="p-2.5 text-center">PJ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standingsTableBody" class="divide-y divide-slate-700/50">
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-500 italic">
+                                    Aún no hay resultados registrados.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Custom Notification Modal -->
+    <div id="modalContainer" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+            <div id="modalIcon" class="text-3xl text-amber-500 mb-1">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 id="modalTitle" class="text-base font-bold text-white">Aviso</h3>
+            <p id="modalMessage" class="text-xs text-slate-300 leading-relaxed">Mensaje de notificación.</p>
+            <button onclick="closeModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl transition duration-200 shadow-md text-xs">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // State Management
+        let players = [];
+        let currentRound = 1;
+        let totalRounds = 3;
+        let roundsData = {}; 
+        let tournamentStarted = false;
+        let activeTab = 'setup';
+
+        window.onload = function() {
+            loadSamplePlayers();
+            switchTab('setup');
+        };
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            
+            // Tab contents
+            document.getElementById('tabContentSetup').classList.add('hidden');
+            document.getElementById('tabContentPairings').classList.add('hidden');
+            document.getElementById('tabContentStandings').classList.add('hidden');
+            
+            document.getElementById('tabContent' + capitalize(tabName)).classList.remove('hidden');
+
+            // Tab buttons styling
+            const tabs = ['setup', 'pairings', 'standings'];
+            tabs.forEach(t => {
+                const btn = document.getElementById('tabBtn' + capitalize(t));
+                if (t === tabName) {
+                    btn.className = "flex-1 py-2 text-xs font-semibold text-center text-amber-400 border-b-2 border-amber-500 transition";
+                } else {
+                    btn.className = "flex-1 py-2 text-xs font-semibold text-center text-slate-400 border-b-2 border-transparent transition";
+                }
+            });
+
+            if (tabName === 'pairings') {
+                renderRoundTabs();
+                renderPairings();
+            } else if (tabName === 'standings') {
+                renderStandings();
+            }
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function showCustomModal(title, message, isSuccess = false) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const iconEl = document.getElementById('modalIcon');
+            if (isSuccess) {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500"></i>';
+            }
+            document.getElementById('modalContainer').classList.remove('hidden');
+            document.getElementById('modalContainer').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('modalContainer').classList.remove('flex');
+            document.getElementById('modalContainer').classList.add('hidden');
+        }
+
+        function loadSamplePlayers() {
+            if (tournamentStarted) {
+                showCustomModal("Aviso", "No se pueden cargar jugadores de prueba una vez iniciado el torneo.");
+                return;
+            }
+            players = [
+                { id: 1, name: "Mateo Fernández", school: "6to A" },
+                { id: 2, name: "Sofía Gómez", school: "6to B" },
+                { id: 3, name: "Lucas Martínez", school: "5to A" },
+                { id: 4, name: "Valentina Ruiz", school: "5to B" },
+                { id: 5, name: "Joaquín Díaz", school: "4to A" },
+                { id: 6, name: "Lucía Castro", school: "4to B" }
+            ];
+            renderPlayers();
+        }
+
+        function clearAllPlayers() {
+            if (tournamentStarted) {
+                showCustomModal("Aviso", "No se puede vaciar la lista con el torneo iniciado.");
+                return;
+            }
+            players = [];
+            renderPlayers();
+        }
+
+        function addPlayer(event) {
+            event.preventDefault();
+            if (tournamentStarted) {
+                showCustomModal("Aviso", "El torneo ya ha comenzado. No se pueden añadir nuevos participantes.");
+                return;
+            }
+            const nameInput = document.getElementById('playerName');
+            const schoolInput = document.getElementById('playerSchool');
+            
+            const newPlayer = {
+                id: players.length > 0 ? Math.max(...players.map(p => p.id)) + 1 : 1,
+                name: nameInput.value.trim(),
+                school: schoolInput.value.trim() || 'General'
+            };
+
+            players.push(newPlayer);
+            nameInput.value = '';
+            schoolInput.value = '';
+            renderPlayers();
+        }
+
+        function removePlayer(id) {
+            if (tournamentStarted) {
+                showCustomModal("Aviso", "No se puede eliminar jugadores con el torneo en curso.");
+                return;
+            }
+            players = players.filter(p => p.id !== id);
+            renderPlayers();
+        }
+
+        function renderPlayers() {
+            const tbody = document.getElementById('playersTableBody');
+            document.getElementById('playerCount').innerText = players.length;
+            
+            if (players.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 italic">No hay jugadores inscritos.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = players.map((p, index) => `
+                <tr class="hover:bg-slate-700/30 transition">
+                    <td class="p-2.5 text-slate-400 font-medium">${index + 1}</td>
+                    <td class="p-2.5 font-medium text-slate-200">${escapeHtml(p.name)}</td>
+                    <td class="p-2.5 text-slate-400">${escapeHtml(p.school)}</td>
+                    <td class="p-2.5 text-right">
+                        <button onclick="removePlayer(${p.id})" class="text-rose-400 hover:text-rose-300 p-1.5 transition" title="Eliminar">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function startTournamentAndSwitch() {
+            if (players.length < 2) {
+                showCustomModal("Jugadores Insuficientes", "Se necesitan al menos 2 jugadores para iniciar o generar emparejamientos.");
+                return;
+            }
+
+            totalRounds = parseInt(document.getElementById('totalRounds').value) || 3;
+            tournamentStarted = true;
+
+            if (!roundsData[currentRound]) {
+                generatePairingsForRound(currentRound);
+            }
+
+            switchTab('pairings');
+        }
+
+        function generatePairingsForRound(roundNum) {
+            let sortedPlayers = [...players];
+            
+            if (roundNum > 1) {
+                const stats = calculateStats();
+                sortedPlayers.sort((a, b) => {
+                    let ptsA = stats[a.id] ? stats[a.id].points : 0;
+                    let ptsB = stats[b.id] ? stats[b.id].points : 0;
+                    return ptsB - ptsA;
+                });
+            } else {
+                sortedPlayers.sort(() => Math.random() - 0.5);
+            }
+
+            let pairings = [];
+            let paired = new Set();
+
+            let tableNum = 1;
+            for (let i = 0; i < sortedPlayers.length; i++) {
+                if (paired.has(sortedPlayers[i].id)) continue;
+                
+                let p1 = sortedPlayers[i];
+                paired.add(p1.id);
+                let p2 = null;
+
+                for (let j = i + 1; j < sortedPlayers.length; j++) {
+                    if (!paired.has(sortedPlayers[j].id)) {
+                        p2 = sortedPlayers[j];
+                        paired.add(p2.id);
+                        break;
+                    }
+                }
+
+                pairings.push({
+                    table: tableNum++,
+                    whiteId: p1.id,
+                    blackId: p2 ? p2.id : null,
+                    result: p2 ? 'pending' : 'bye'
+                });
+            }
+
+            roundsData[roundNum] = pairings;
+        }
+
+        function renderRoundTabs() {
+            const container = document.getElementById('roundTabs');
+            let html = '';
+            for (let r = 1; r <= totalRounds; r++) {
+                let isActive = r === currentRound;
+                let activeClass = isActive ? 'bg-amber-600 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-300 hover:bg-slate-700';
+                html += `<button onclick="switchRound(${r})" class="px-3 py-1.5 rounded-xl text-xs transition duration-200 whitespace-nowrap ${activeClass}">Ronda ${r}</button>`;
+            }
+            container.innerHTML = html;
+            document.getElementById('currentRoundDisplay').innerText = currentRound;
+        }
+
+        function switchRound(r) {
+            if (r > currentRound && !roundsData[r]) {
+                generatePairingsForRound(r);
+            }
+            currentRound = r;
+            renderRoundTabs();
+            renderPairings();
+        }
+
+        function renderPairings() {
+            const container = document.getElementById('pairingsContainer');
+            const pairings = roundsData[currentRound];
+
+            if (!pairings || pairings.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-500 italic text-xs">No hay emparejamientos para esta ronda.</div>`;
+                return;
+            }
+
+            container.innerHTML = pairings.map((p, idx) => {
+                let whitePlayer = players.find(x => x.id === p.whiteId);
+                let blackPlayer = p.blackId ? players.find(x => x.id === p.blackId) : null;
+
+                let whiteName = whitePlayer ? whitePlayer.name : 'Desconocido';
+                let blackName = blackPlayer ? blackPlayer.name : 'Descanso (BYE)';
+
+                if (!blackPlayer) {
+                    return `
+                        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 space-y-2">
+                            <div class="flex justify-between items-center text-[11px] text-slate-400">
+                                <span class="font-bold text-amber-500">Mesa ${p.table}</span>
+                                <span class="bg-amber-950/40 text-amber-300 px-2 py-0.5 rounded border border-amber-500/20">Descanso / BYE (+1)</span>
+                            </div>
+                            <div class="text-xs font-semibold text-slate-200">${escapeHtml(whiteName)}</div>
+                        </div>
+                    `;
+                }
+
+                let res = p.result;
+                return `
+                    <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-3.5 space-y-3 shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Mesa ${p.table}</span>
+                            <span class="text-[10px] text-slate-500">Partida Oficial</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700/50 flex flex-col justify-center">
+                                <span class="text-[10px] text-slate-400 mb-0.5">Blancas ⚪</span>
+                                <span class="font-semibold text-slate-100 truncate">${escapeHtml(whiteName)}</span>
+                            </div>
+                            <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700/50 flex flex-col justify-center">
+                                <span class="text-[10px] text-slate-400 mb-0.5">Negras ⚫</span>
+                                <span class="font-semibold text-slate-100 truncate">${escapeHtml(blackName)}</span>
+                            </div>
+                        </div>
+                        <!-- Score selector buttons optimized for touch thumbs -->
+                        <div class="grid grid-cols-3 gap-1.5 pt-1">
+                            <button onclick="setResult(${currentRound}, ${idx}, 'white')" class="py-2 text-xs rounded-lg font-medium transition ${res === 'white' ? 'bg-amber-600 text-slate-950 font-bold shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                1 - 0 <span class="text-[9px] block opacity-75">Gana Blancas</span>
+                            </button>
+                            <button onclick="setResult(${currentRound}, ${idx}, 'draw')" class="py-2 text-xs rounded-lg font-medium transition ${res === 'draw' ? 'bg-slate-600 text-white font-bold shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                ½ - ½ <span class="text-[9px] block opacity-75">Tablas</span>
+                            </button>
+                            <button onclick="setResult(${currentRound}, ${idx}, 'black')" class="py-2 text-xs rounded-lg font-medium transition ${res === 'black' ? 'bg-amber-600 text-slate-950 font-bold shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                0 - 1 <span class="text-[9px] block opacity-75">Gana Negras</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setResult(roundNum, pairingIndex, resultType) {
+            roundsData[roundNum][pairingIndex].result = resultType;
+            renderPairings();
+            renderStandings();
+        }
+
+        function calculateStats() {
+            let stats = {};
+            players.forEach(p => {
+                stats[p.id] = { points: 0, played: 0 };
+            });
+
+            Object.keys(roundsData).forEach(rKey => {
+                let pairings = roundsData[rKey];
+                pairings.forEach(p => {
+                    if (p.result === 'bye') {
+                        if (stats[p.whiteId]) {
+                            stats[p.whiteId].points += 1;
+                            stats[p.whiteId].played += 1;
+                        }
+                    } else if (p.result === 'white') {
+                        if (stats[p.whiteId]) {
+                            stats[p.whiteId].points += 1;
+                            stats[p.whiteId].played += 1;
+                        }
+                        if (p.blackId && stats[p.blackId]) {
+                            stats[p.blackId].played += 1;
+                        }
+                    } else if (p.result === 'black') {
+                        if (stats[p.whiteId]) {
+                            stats[p.whiteId].played += 1;
+                        }
+                        if (p.blackId && stats[p.blackId]) {
+                            stats[p.blackId].points += 1;
+                            stats[p.blackId].played += 1;
+                        }
+                    } else if (p.result === 'draw') {
+                        if (stats[p.whiteId]) {
+                            stats[p.whiteId].points += 0.5;
+                            stats[p.whiteId].played += 1;
+                        }
+                        if (p.blackId && stats[p.blackId]) {
+                            stats[p.blackId].points += 0.5;
+                            stats[p.blackId].played += 1;
+                        }
+                    }
+                });
+            });
+
+            return stats;
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standingsTableBody');
+            if (players.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500 italic">No hay jugadores registrados.</td></tr>`;
+                return;
+            }
+
+            let stats = calculateStats();
+            let rankedPlayers = [...players].sort((a, b) => {
+                let ptsA = stats[a.id] ? stats[a.id].points : 0;
+                let ptsB = stats[b.id] ? stats[b.id].points : 0;
+                if (ptsB !== ptsA) return ptsB - ptsA;
+                return a.name.localeCompare(b.name);
+            });
+
+            tbody.innerHTML = rankedPlayers.map((p, index) => {
+                let s = stats[p.id] || { points: 0, played: 0 };
+                let medalIcon = '';
+                if (index === 0) medalIcon = '<i class="fa-solid fa-medal text-amber-400 mr-1 text-sm"></i>';
+                else if (index === 1) medalIcon = '<i class="fa-solid fa-medal text-slate-300 mr-1 text-sm"></i>';
+                else if (index === 2) medalIcon = '<i class="fa-solid fa-medal text-amber-700 mr-1 text-sm"></i>';
+
+                return `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-2.5 font-bold text-slate-300">${index + 1}</td>
+                        <td class="p-2.5 font-medium text-white flex items-center">${medalIcon}${escapeHtml(p.name)}</td>
+                        <td class="p-2.5 text-slate-400">${escapeHtml(p.school)}</td>
+                        <td class="p-2.5 text-center font-bold text-amber-400">${s.points}</td>
+                        <td class="p-2.5 text-center text-slate-400">${s.played}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function resetTournament() {
+            tournamentStarted = false;
+            currentRound = 1;
+            roundsData = {};
+            switchTab('setup');
+            showCustomModal("Torneo Reiniciado", "Se han borrado los emparejamientos y resultados anteriores.", true);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function exportToWord() {
+            const tournamentName = document.getElementById('tournamentName').value || 'Torneo de Ajedrez';
+            const category = document.getElementById('tournamentCategory').value || 'Escolar';
+            
+            let stats = calculateStats();
+            let rankedPlayers = [...players].sort((a, b) => {
+                let ptsA = stats[a.id] ? stats[a.id].points : 0;
+                let ptsB = stats[b.id] ? stats[b.id].points : 0;
+                return ptsB - ptsA;
+            });
+
+            let htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset="utf-8">
+                    <title>${tournamentName}</title>
+                    <style>
+                        body { font-family: 'Arial', sans-serif; color: #333; line-height: 1.4; margin: 20px; }
+                        h1 { color: #1e293b; text-align: center; font-size: 22px; margin-bottom: 5px; }
+                        h2 { color: #0f172a; font-size: 16px; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; margin-top: 25px; }
+                        .subtitle { text-align: center; color: #64748b; font-size: 12px; margin-bottom: 25px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; }
+                        th, td { border: 1px solid #94a3b8; padding: 6px 10px; text-align: left; }
+                        th { background-color: #f1f5f9; color: #334155; font-weight: bold; }
+                        .text-center { text-align: center; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${escapeHtml(tournamentName)}</h1>
+                    <div class="subtitle">Categoría: ${escapeHtml(category)} | Fecha: ${new Date().toLocaleDateString()}</div>
+            `;
+
+            htmlContent += `
+                <h2>Clasificación Final / Tabla de Posiciones</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Pos</th>
+                            <th style="width: 45%;">Alumno</th>
+                            <th style="width: 25%;">Curso</th>
+                            <th style="width: 20%; text-align: center;">Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            rankedPlayers.forEach((p, idx) => {
+                let s = stats[p.id] || { points: 0 };
+                htmlContent += `
+                    <tr>
+                        <td class="text-center">${idx + 1}</td>
+                        <td>${escapeHtml(p.name)}</td>
+                        <td>${escapeHtml(p.school)}</td>
+                        <td class="text-center"><b>${s.points}</b></td>
+                    </tr>
+                `;
+            });
+
+            htmlContent += `</tbody></table>`;
+
+            for (let r = 1; r <= totalRounds; r++) {
+                let pairings = roundsData[r];
+                if (!pairings || pairings.length === 0) continue;
+
+                htmlContent += `<h2>Ronda ${r} - Partidas y Resultados</h2>`;
+                htmlContent += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Mesa</th>
+                                <th style="width: 35%;">Blancas</th>
+                                <th style="width: 15%; text-align: center;">Resultado</th>
+                                <th style="width: 35%;">Negras</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                pairings.forEach(p => {
+                    let w = players.find(x => x.id === p.whiteId);
+                    let b = p.blackId ? players.find(x => x.id === p.blackId) : null;
+                    let wName = w ? w.name : '-';
+                    let bName = b ? b.name : 'Descanso (BYE)';
+                    let resText = 'Pendiente';
+                    if (p.result === 'white') resText = '1 - 0';
+                    else if (p.result === 'black') resText = '0 - 1';
+                    else if (p.result === 'draw') resText = '½ - ½';
+                    else if (p.result === 'bye') resText = 'BYE (+1)';
+
+                    htmlContent += `
+                        <tr>
+                            <td class="text-center">Mesa ${p.table}</td>
+                            <td><b>${escapeHtml(wName)}</b></td>
+                            <td class="text-center">${resText}</td>
+                            <td><b>${escapeHtml(bName)}</b></td>
+                        </tr>
+                    `;
+                });
+
+                htmlContent += `</tbody></table>`;
+            }
+
+            htmlContent += `
+                    <div class="footer">
+                        Documento generado automáticamente por JaqueMate Escolar - Móvil.
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + htmlContent], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tournamentName.replace(/[^a-zA-Z0-9]/g, '_')}_Resultados.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showCustomModal("Exportación Exitosa", "Se ha generado y descargado el documento Word con el reporte del torneo.", true);
+        }
+    </script>
+</body>
+</html>
